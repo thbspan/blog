@@ -27,9 +27,9 @@ var WebSocketServer = require('ws').Server
  });
 ```
 启动三个websocket server端如下图所示
-![Alt text](./2018-05-16 23-04-08屏幕截图_meitu_1.jpg)
+![websocket server启动效果](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-04-08%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_1.jpg)
 浏览器端连接测试，如下图所示，三个均正常
-![Alt text](./2018-05-16 23-23-07屏幕截图_meitu_2.jpg)
+![websocket server浏览器端测试](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-23-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_2.jpg)
 
 ### nginx 负载均衡配置
 ```
@@ -57,11 +57,10 @@ server {
 ```
 ### 浏览器端负载均衡测试
 我们先连接一台Websocket服务，测试连接和消息发送情况
-
-![Alt text](./2018-05-16 23-43-42屏幕截图_meitu_1.jpg)
+![nginx负载均衡测试效果1](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-43-42%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_1.jpg)
 从上图可以看出，当建立连接后，服务端和客户端会保持连接，并不会出现连接到其他服务的情况；
 我们关闭当前连接，建立新的websocket连接，发现消息发送到了另一台机器，说明负载均衡正常，而且和之前一样，服务端和客户端也能够保持长连接，如下图所示：
-![Alt text](./2018-05-16 23-45-39屏幕截图_meitu_2.jpg)
+![nginx负载均衡测试效果2](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-45-39%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_2.jpg)
 
 ### 总结
 nginx负载均衡能够支持websocket这种长连接协议
