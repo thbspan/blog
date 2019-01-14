@@ -11,7 +11,11 @@
 + 除非另外指定，Groovy的所有内容都是public
 + Groovy允许定义简单的脚本，同时与需定义正规的class对象
 + Groovy在普通的Java对象上增加了一些独特的方法和快捷方式，是的它们更容易使用
-+ Groovy闭包
++ Groovy闭包，如果函数中最后一个参数是闭包，函数调用时可以把闭包参数拿到外部来
+
+    比如函数定义 def allprojects(Closure closure)，则可以这样调用 allprojects{
+
+    }
 + Groovy是动态类型，可以使用def定义任何对象，类似js var，类型也可以动态变化
 
 ## 原始类型的转换

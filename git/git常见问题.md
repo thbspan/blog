@@ -20,6 +20,3 @@
     PreferredAuthentications publickey
     IdentityFile ~/.ssh/github_rsa
 
-# 3、版本回退
-    使用git reset回退版本之后直接push会报错，因为服务端head在你的前面，系统会提示你更新（但是如果更新的话，git reset就会失效）
-    可以添加-f参数（git push -f origin master）
