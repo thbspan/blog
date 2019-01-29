@@ -10,3 +10,10 @@
 ### 修改当前网络连接对应的DNS服务器，这里的网络连接可以用名称或者UUID来标识
     nmcli con mod [name|UUID] ipv4.dns "114.114.114.114 8.8.8.8"
 
+## 直接修改配置文件
+
+### 修改/etc/sysconfig/network-scripts/ifcfg-ens33[当前联网设备]
+
+### 添加DNS1,DNS2配置
+    DNS1=114.114.114.114
+    DNS2=8.8.8.8
