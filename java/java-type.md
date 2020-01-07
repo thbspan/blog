@@ -1,26 +1,32 @@
 # Type介绍
-    Type Java中所有类型的父类。 这些包括原始类型（raw types对应Class），参数化类型（parameterized types对应ParameterizedType），数组类型（array types对应 GenericArrayType），类型变量（TypeVariable）和原生类型（primitive types对应 Class）。
 
-# 接口直接的关系如下
-![Type子类关系](./Type子类关系.png "Type子类关系")
+Java中所有类型的父类、所以的类型如下
 
-# 各类型介绍
+- 原始类型（raw types对应Class）
+- 参数化类型（parameterized types对应ParameterizedType）
+- 数组类型（array types对应 GenericArrayType）
+- 类型变量（TypeVariable）
+- 原生类型（primitive types对应 Class）
+
+## 接口直接的关系如下
+
+![Type子类关系](java-type.assets/Type子类关系.png "Type子类关系")
 
 ## ParameterizedType
 泛型，带有k,V,?的对象，例如：
-    
     List<T>, Map<K,V>，Class<?> 中的参数对象
 
 下面的类型不是
-    
-    Set set
-    Map map
+```java
+Set set = null;
+Map map = null;
+```
 
 ### 主要方法
-+ Type[] getActualTypeArguments();
-    
-    返回泛型<>中的实际类型数组
-+ Type getRawType();
++ Type[] getActualTypeArguments()
+  
+    返回泛型<>中的实际类型数组；比如`List<Integer> `返回Integer
++ Type getRawType()
 
     返回泛型<>前面的对象；比如List<?> 返回List
 + Type getOwnerType()
@@ -63,23 +69,23 @@ public class ParameterizedTypeTest {
 ```
 
 ## TypeVariable
-类型变量，泛型中的变量 ，例如：T t = null;等变量
+类型变量，泛型中的变量 ，例如：`T t = null`等变量
 
 ### 主要方法
 + getBounds
 
-    获取泛型的上界，默认Object（为什么没有下边界？类定义时只有 public class Test<T extends Number>）
+    获取泛型的上界，默认Object（为什么没有下边界？类定义时只有 `public class Test<T extends Number>`）
     
 + getHenericDeclaration
 
     获取声明该变量的实体（及获得类、方法或构造器名称）
 
 + getName
-    
+  
     获取泛型的名称 即 K V E等等
 
 ### 代码例如：
-```Java
+```java
 public class TypeVariableTest<T extends Number & Serializable, V> {
     private T t;
     private V v;
@@ -120,15 +126,15 @@ public class TypeVariableTest<T extends Number & Serializable, V> {
 ```
 
 ## GenericArrayType
-泛型类数组；例如：List<?>[], **注意**，普通的数组是Class类型，可以通过Class#getComponentType获取数组中元素的类型
+泛型类数组；例如：List<?>[], **注意：**，普通的数组是Class类型，可以通过Class#getComponentType获取数组中元素的类型
 
 ### 主要方法
-+getGenericComponentType 
+- getGenericComponentType 
 
-    获取数组中元素的类型
+  获取数组中元素的类型
 
 ### 代码示例
-```Java
+```java
 public class GenericArrayTypeTest {
     public <T> T[] getArray() {
         return null;
@@ -156,7 +162,7 @@ public class GenericArrayTypeTest {
 原始类型和原始类型数组，不包含泛型的类对象和数组
 
 ### 代理示例
-```Java
+```java
 public class ClazzTest {
     private int a;
 
@@ -207,7 +213,7 @@ public class ClazzTest {
 通配符表达式，或泛型表达式，它虽然是Type的一个子接口，但并不是Java类型中的一种，表示的仅仅是类似 ? extends T、? super K这样的通配符表达式。 通常通过ParameterizedType方法getActualTypeArguments返回
 
 ### 代码示例
-```Java
+```java
 public class WildcardTypeTest {
 
     public void wildType(Class<? extends Number> clazz) {
