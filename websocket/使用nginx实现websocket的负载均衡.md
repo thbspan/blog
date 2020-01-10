@@ -1,19 +1,24 @@
-## 使用nginx实现websocket的负载均衡
+# 使用nginx实现websocket的负载均衡
 
 当web应用访问量过大时，我们就需要做负载均衡，将同一个域名的请求分散到不同的服务器上。nginx就可以做到。它可以按照轮询、ip哈希、URL哈希、权重等多种方式对后端服务器做负载均衡。但是分配到不同的机器上后，如果请求是有状态的，比如有些页面需要用户登录之后才能访问，我们就需要保证单个用户请求落在一台机器上或者实现多台机器之间的session共享，那样才能保持登录状态。而对于websocket这种长连接协议，nginx负载均衡之后能否保持连接状态呢，我们接下来做一些测试。
 
-### 测试软件和平台
+## 测试软件和平台
+
 实验平台Ubuntu 16.04
 nginx版本 1.14.0
 nodejs 版本（8.11.2）(实现websocket服务端)
 
-### websocket server
+## websocket server
+
 安装ws模块
+
 ```
 # 安装在当前目录，想要安装到系统目录请使用sudo npm -g install ws
 npm install ws
 ```
+
 server0.js代码，另外两个文件server1.js server2.js 相同只是端口不同
+
 ```js
 console.log("Server started");
 var Msg = '';
@@ -26,12 +31,14 @@ var WebSocketServer = require('ws').Server
     });
  });
 ```
-启动三个websocket server端如下图所示
-![websocket server启动效果](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-04-08%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_1.jpg)
-浏览器端连接测试，如下图所示，三个均正常
-![websocket server浏览器端测试](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-23-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_2.jpg)
 
-### nginx 负载均衡配置
+启动三个websocket server端如下图所示
+![websocket server启动效果](2018-05-16%2023-04-08%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_1.jpg)
+浏览器端连接测试，如下图所示，三个均正常
+![websocket server浏览器端测试](2018-05-16%2023-23-07%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_2.jpg)
+
+## nginx 负载均衡配置
+
 ```
 map $http_upgrade $connection_upgrade {
     default upgrade;
@@ -55,12 +62,15 @@ server {
 
 }
 ```
-### 浏览器端负载均衡测试
+
+## 浏览器端负载均衡测试
+
 我们先连接一台Websocket服务，测试连接和消息发送情况
-![nginx负载均衡测试效果1](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-43-42%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_1.jpg)
+![nginx负载均衡测试效果1](2018-05-16%2023-43-42%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_1.jpg)
 从上图可以看出，当建立连接后，服务端和客户端会保持连接，并不会出现连接到其他服务的情况；
 我们关闭当前连接，建立新的websocket连接，发现消息发送到了另一台机器，说明负载均衡正常，而且和之前一样，服务端和客户端也能够保持长连接，如下图所示：
-![nginx负载均衡测试效果2](https://github.com/thbspan/blog/blob/master/websocket/2018-05-16%2023-45-39%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_2.jpg)
+![nginx负载均衡测试效果2](2018-05-16%2023-45-39%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE_meitu_2.jpg)
 
-### 总结
+## 总结
+
 nginx负载均衡能够支持websocket这种长连接协议
