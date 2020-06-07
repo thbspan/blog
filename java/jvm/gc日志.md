@@ -81,26 +81,29 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
 10. CMS-concurrent-reset-start 开始并发重置
 11. [CMS-concurrent-reset: 0.004/0.004 secs] [Times: user=0.05 sys=0.02, real=0.00 secs] 并发重置耗时
 
-## G1日志分析
+## G1日志分析（jdk 8）
+
+### Yong GC
 
 ``` reStructuredText
-// 程序运行1.042s后发生GC（Evacuation Pause）
+// 程序运行1.042s后发生GC（Evacuation Pause） (可以通过添加JVM参数-XX:+PrintGCDateStamps打印发生gc日志的详细时间)
+// Yong GC
 1.042: [GC pause (G1 Evacuation Pause) (young), 0.0044119 secs]
    // 并行GC耗时3.0 ms，GC线程数4个
    [Parallel Time: 3.0 ms, GC Workers: 4]
       // 所有工作线程启动时间的最小值、平均值、最大值、差别
       [GC Worker Start (ms): Min: 1042.5, Avg: 1042.5, Max: 1042.5, Diff: 0.0]
-      // 每个扫码root的线程耗时
+      // 每个扫描root线程的耗时
       [Ext Root Scanning (ms): Min: 0.5, Avg: 0.7, Max: 1.0, Diff: 0.5, Sum: 2.8]
       // 每个执行更新RS（Remembered Sets）的线程的耗时最小值、平均值、最大值、差别
       [Update RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
       	 // 每个工作线程执行UB（Update Buffers）的数量的最小值、平均值、最大值、差别
          [Processed Buffers: Min: 0, Avg: 0.0, Max: 0, Diff: 0, Sum: 0]
-      // 每个工作线程扫描RS的耗时统计数据
+      // 每个工作线程扫描RSet的耗时统计数据
       [Scan RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
-      // 
+      // 扫描code root耗时。Code Root是JIT编译后的代码里引用了heap中的对象
       [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.2, Diff: 0.2, Sum: 0.3]
-      // 每个工作线程执行OC（Object Copy）的耗时统计数据
+      // 每个工作线程执行OC（Object Copy）的耗时统计数据（拷贝存活对象到新的Region）
       [Object Copy (ms): Min: 1.9, Avg: 2.1, Max: 2.3, Diff: 0.5, Sum: 8.4]
       // 每个工作线程执行终止的耗时统计数据
       [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
@@ -110,9 +113,12 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
       [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
       [GC Worker Total (ms): Min: 2.9, Avg: 2.9, Max: 2.9, Diff: 0.0, Sum: 11.7]
       [GC Worker End (ms): Min: 1045.4, Avg: 1045.4, Max: 1045.4, Diff: 0.0]
+   // ===================== 串行任务 ============================
+   // 修复GC期间code root指针改变的耗时
    [Code Root Fixup: 0.0 ms]
+   // 清除code root耗时
    [Code Root Purge: 0.0 ms]
-   // 清理CT（Card Table）的耗时
+   // 清理CT（Card Table）中的dirty card的耗时
    [Clear CT: 0.0 ms]
    // 其他任务（上述未统计的内容）的耗时
    [Other: 1.4 ms]
@@ -131,10 +137,88 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
    // SurvivorsGC前为0，GC后变为2048K
    // GC前，Heap容量为256M，使用了14M，GC后，Heap容量为256M，使用了9739k
    [Eden: 14.0M(14.0M)->0.0B(16.0M) Survivors: 0.0B->2048.0K Heap: 14.0M(256.0M)->3683.5K(256.0M)]
- [Times: user=0.00 sys=0.00, real=0.00 secs] 
+ // user=0.00 在垃圾回收时，花费在用户代码上的CPU时间
+ // 这个时间包含了所有线程运行的CPU时间，所以比real-time大很多
+ // sys=0.00: 花费在系统内核上的时间
+ // real=0.03: 垃圾回收的实际时间。这里包括了其他进程的时间和等待时间。
+ [Times: user=0.00 sys=0.00, real=0.00 secs]
 ```
 
+### 并发标记日志
 
+```reStructuredText
+// 利用STW停顿期间，跟踪所有可达对象，该阶段与Yong GC一起执行。同时该阶段也设置两个指针TAMS来标识已经存在的对象以及在并发标记阶段新生成的对象
+1.872: [GC pause (Metadata GC Threshold) (young) (initial-mark), 0.0084965 secs]
+   // 并行任务花费的STW的时间，从收集开始到最后一个GC线程结束；GC Worker：并行收集线程数
+   [Parallel Time: 5.5 ms, GC Workers: 13]
+      [GC Worker Start (ms): Min: 1871.9, Avg: 1872.0, Max: 1872.1, Diff: 0.1]
+      [Ext Root Scanning (ms): Min: 0.9, Avg: 1.0, Max: 1.2, Diff: 0.4, Sum: 13.6]
+      [Update RS (ms): Min: 0.0, Avg: 0.3, Max: 0.9, Diff: 0.9, Sum: 3.3]
+         [Processed Buffers: Min: 0, Avg: 0.9, Max: 2, Diff: 2, Sum: 12]
+      [Scan RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.2, Max: 1.1, Diff: 1.1, Sum: 3.1]
+      [Object Copy (ms): Min: 3.2, Avg: 3.7, Max: 4.1, Diff: 0.8, Sum: 48.7]
+      [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
+         [Termination Attempts: Min: 3, Avg: 6.8, Max: 12, Diff: 9, Sum: 88]
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.1, Max: 0.1, Diff: 0.1, Sum: 0.7]
+      [GC Worker Total (ms): Min: 5.3, Avg: 5.4, Max: 5.4, Diff: 0.1, Sum: 69.6]
+      [GC Worker End (ms): Min: 1877.3, Avg: 1877.3, Max: 1877.4, Diff: 0.1]
+   [Code Root Fixup: 0.1 ms]
+   [Code Root Purge: 0.0 ms]
+   [Clear CT: 0.1 ms]
+   [Other: 2.8 ms]
+      [Choose CSet: 0.0 ms]
+      [Ref Proc: 2.4 ms]
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.1 ms]
+      [Humongous Register: 0.0 ms]
+      [Humongous Reclaim: 0.0 ms]
+      [Free CSet: 0.1 ms]
+   [Eden: 61440.0K(148.0M)->0.0B(142.0M) Survivors: 5120.0K->11264.0K Heap: 69572.0K(256.0M)->14230.6K(256.0M)]
+[Times: user=0.00 sys=0.00, real=0.01 secs]
+// 扫描初始标记阶段：扫描Survivor区和Root Region并标记出来
+1.881: [GC concurrent-root-region-scan-start]
+1.884: [GC concurrent-root-region-scan-end, 0.0031802 secs]
+// 并发标记阶段：该阶段和应用线程一起执行，并发线程数默认是并行线程数的四分之一。可以通过-XX:ConcGCThreads显示指定
+1.884: [GC concurrent-mark-start]
+1.884: [GC concurrent-mark-end, 0.0000903 secs]
+// 重新标记阶段：STW，标记那些在并发标记阶段发生变化的对象
+1.884: [GC remark 1.884: [Finalize Marking, 0.0001648 secs] 1.884: [GC ref-proc, 0.0001569 secs] 1.884: [Unloading, 0.0029524 secs], 0.0034686 secs]
+[Times: user=0.00 sys=0.00, real=0.00 secs]
+// 清理垃圾阶段 Cleanup：也是STW，这个阶段没有存活的Old Region 和 Humongous Region将被释放和清空
+// 为了准备下次GC，在CSets中的Old Regions会根据他们的回收收益的大小排序，
+// previous bitmaps 和 next bitmaps会被交换
+// 同时并行线程会标记那些inital mark阶段生成的对象，以及至少存在一个存活对象的region的bitmap
+1.888: [GC cleanup 15254K->13266K(256M), 0.0005429 secs]
+[Times: user=0.00 sys=0.00, real=0.00 secs]
+```
 
+### Mixed GC
 
+![mixed](gc日志.assets/mixed.webp)
 
+`Mixed GC`的日志和`Yong GC`日志很像，只有下面的几点不同
+
+- 第一行表示这是一个Mixed GC
+- 收集的集合里包含了老年代（Old Region）,由并发标记阶段确定的
+
+### Full GC
+
+![g1-full-gc](gc日志.assets/g1-full-gc.webp)
+
+G1的垃圾收集器是和应用程序并发执行的，当Mixed GC的速度赶不上应用程序申请内存的速度的时候，Mixed GC就会降级到Full GC，使用的是Serial GC。Full GC会导致长时间的STW，应该要尽量避免。
+
+触发条件
+
+- 拷贝存活对象（Evacuation）没有足够的to-space 来存放晋升的对象
+- 并发处理过程完成之前空间耗尽
+
+注意事项
+
+- 如果是几天一次Full GC，则是正常现象，但是每小时频繁GC就需要调优了
+
+## 参考链接
+
+[jdk 1.8 G1 GC 日志](https://www.jianshu.com/p/ac1ba3479c08)
+
+ 
