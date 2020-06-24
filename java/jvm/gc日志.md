@@ -137,10 +137,9 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
    // SurvivorsGC前为0，GC后变为2048K
    // GC前，Heap容量为256M，使用了14M，GC后，Heap容量为256M，使用了9739k
    [Eden: 14.0M(14.0M)->0.0B(16.0M) Survivors: 0.0B->2048.0K Heap: 14.0M(256.0M)->3683.5K(256.0M)]
- // user=0.00 在垃圾回收时，花费在用户代码上的CPU时间
- // 这个时间包含了所有线程运行的CPU时间，所以比real-time大很多
+ // user=0.00 在垃圾回收时，花费在用户代码上的CPU时间， 这个时间包含了所有线程运行的CPU时间，所以比real大很多
  // sys=0.00: 花费在系统内核上的时间
- // real=0.03: 垃圾回收的实际时间。这里包括了其他进程的时间和等待时间。
+ // real=0.03: 垃圾回收的实际时间，也就是从整体上看GC耗费时间
  [Times: user=0.00 sys=0.00, real=0.00 secs]
 ```
 
@@ -148,49 +147,47 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
 
 ```reStructuredText
 // 利用STW停顿期间，跟踪所有可达对象，该阶段与Yong GC一起执行。同时该阶段也设置两个指针TAMS来标识已经存在的对象以及在并发标记阶段新生成的对象
-1.872: [GC pause (Metadata GC Threshold) (young) (initial-mark), 0.0084965 secs]
+16.755: [GC pause (G1 Evacuation Pause) (young) (initial-mark), 0.0690397 secs]
    // 并行任务花费的STW的时间，从收集开始到最后一个GC线程结束；GC Worker：并行收集线程数
-   [Parallel Time: 5.5 ms, GC Workers: 13]
-      [GC Worker Start (ms): Min: 1871.9, Avg: 1872.0, Max: 1872.1, Diff: 0.1]
-      [Ext Root Scanning (ms): Min: 0.9, Avg: 1.0, Max: 1.2, Diff: 0.4, Sum: 13.6]
-      [Update RS (ms): Min: 0.0, Avg: 0.3, Max: 0.9, Diff: 0.9, Sum: 3.3]
-         [Processed Buffers: Min: 0, Avg: 0.9, Max: 2, Diff: 2, Sum: 12]
-      [Scan RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
-      [Code Root Scanning (ms): Min: 0.0, Avg: 0.2, Max: 1.1, Diff: 1.1, Sum: 3.1]
-      [Object Copy (ms): Min: 3.2, Avg: 3.7, Max: 4.1, Diff: 0.8, Sum: 48.7]
+   [Parallel Time: 48.0 ms, GC Workers: 4]
+      [GC Worker Start (ms): Min: 16756.0, Avg: 16756.0, Max: 16756.1, Diff: 0.1]
+      [Ext Root Scanning (ms): Min: 6.0, Avg: 7.0, Max: 8.3, Diff: 2.3, Sum: 28.0]
+      [Update RS (ms): Min: 1.1, Avg: 1.3, Max: 1.8, Diff: 0.8, Sum: 5.2]
+         [Processed Buffers: Min: 3, Avg: 4.5, Max: 8, Diff: 5, Sum: 18]
+      [Scan RS (ms): Min: 0.4, Avg: 0.6, Max: 0.8, Diff: 0.4, Sum: 2.4]
+      [Code Root Scanning (ms): Min: 0.8, Avg: 1.5, Max: 2.4, Diff: 1.6, Sum: 6.0]
+      [Object Copy (ms): Min: 35.4, Avg: 37.3, Max: 38.8, Diff: 3.5, Sum: 149.0]
       [Termination (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
-         [Termination Attempts: Min: 3, Avg: 6.8, Max: 12, Diff: 9, Sum: 88]
-      [GC Worker Other (ms): Min: 0.0, Avg: 0.1, Max: 0.1, Diff: 0.1, Sum: 0.7]
-      [GC Worker Total (ms): Min: 5.3, Avg: 5.4, Max: 5.4, Diff: 0.1, Sum: 69.6]
-      [GC Worker End (ms): Min: 1877.3, Avg: 1877.3, Max: 1877.4, Diff: 0.1]
-   [Code Root Fixup: 0.1 ms]
-   [Code Root Purge: 0.0 ms]
-   [Clear CT: 0.1 ms]
-   [Other: 2.8 ms]
+      [GC Worker Other (ms): Min: 0.1, Avg: 0.1, Max: 0.2, Diff: 0.1, Sum: 0.5]
+      [GC Worker Total (ms): Min: 47.7, Avg: 47.8, Max: 47.9, Diff: 0.1, Sum: 191.2]
+      [GC Worker End (ms): Min: 16803.8, Avg: 16803.8, Max: 16803.9, Diff: 0.1]
+   [Code Root Fixup: 1.2 ms]
+   [Code Root Purge: 0.1 ms]
+   [Clear CT: 0.5 ms]
+   [Other: 19.1 ms]
       [Choose CSet: 0.0 ms]
-      [Ref Proc: 2.4 ms]
-      [Ref Enq: 0.0 ms]
-      [Redirty Cards: 0.1 ms]
-      [Humongous Register: 0.0 ms]
+      [Ref Proc: 15.9 ms]
+      [Ref Enq: 0.2 ms]
+      [Redirty Cards: 0.2 ms]
       [Humongous Reclaim: 0.0 ms]
-      [Free CSet: 0.1 ms]
-   [Eden: 61440.0K(148.0M)->0.0B(142.0M) Survivors: 5120.0K->11264.0K Heap: 69572.0K(256.0M)->14230.6K(256.0M)]
-[Times: user=0.00 sys=0.00, real=0.01 secs]
+      [Free CSet: 1.9 ms]
+   [Eden: 1205.0M(1205.0M)->0.0B(1183.0M) Survivors: 23.0M->45.0M Heap: 1242.2M(2048.0M)->59.2M(2048.0M)]
+ [Times: user=0.18 sys=0.03, real=0.07 secs]
 // 扫描初始标记阶段：扫描Survivor区和Root Region并标记出来
-1.881: [GC concurrent-root-region-scan-start]
-1.884: [GC concurrent-root-region-scan-end, 0.0031802 secs]
+16.825: [GC concurrent-root-region-scan-start]
+16.862: [GC concurrent-root-region-scan-end, 0.0372516 secs]
 // 并发标记阶段：该阶段和应用线程一起执行，并发线程数默认是并行线程数的四分之一。可以通过-XX:ConcGCThreads显示指定
-1.884: [GC concurrent-mark-start]
-1.884: [GC concurrent-mark-end, 0.0000903 secs]
+16.862: [GC concurrent-mark-start]
+16.895: [GC concurrent-mark-end, 0.0329025 secs]
 // 重新标记阶段：STW，标记那些在并发标记阶段发生变化的对象
-1.884: [GC remark 1.884: [Finalize Marking, 0.0001648 secs] 1.884: [GC ref-proc, 0.0001569 secs] 1.884: [Unloading, 0.0029524 secs], 0.0034686 secs]
-[Times: user=0.00 sys=0.00, real=0.00 secs]
-// 清理垃圾阶段 Cleanup：也是STW，这个阶段没有存活的Old Region 和 Humongous Region将被释放和清空
+16.895: [GC remark 16.895: [Finalize Marking, 0.0015935 secs] 16.897: [GC ref-proc, 0.0008752 secs] 16.898: [Unloading, 0.0176835 secs], 0.0209333 secs]
+ [Times: user=0.06 sys=0.00, real=0.02 secs]
+// 清理垃圾阶段 Cleanup：也是STW，这个阶段没有存活对象的Old Region 和 Humongous Region将被释放和清空
 // 为了准备下次GC，在CSets中的Old Regions会根据他们的回收收益的大小排序，
 // previous bitmaps 和 next bitmaps会被交换
 // 同时并行线程会标记那些inital mark阶段生成的对象，以及至少存在一个存活对象的region的bitmap
-1.888: [GC cleanup 15254K->13266K(256M), 0.0005429 secs]
-[Times: user=0.00 sys=0.00, real=0.00 secs]
+16.916: [GC cleanup 76M->76M(2048M), 0.0024148 secs]
+ [Times: user=0.00 sys=0.00, real=0.00 secs]
 ```
 
 ### Mixed GC
