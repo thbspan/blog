@@ -203,12 +203,25 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
 
 ![g1-full-gc](gc日志.assets/g1-full-gc.webp)
 
+``` reStructuredText
+9739.946: [Full GC (Heap Dump Initiated GC)  585M->116M(2048M), 0.8014562 secs]
+   [Eden: 342.0M(1199.0M)->0.0B(1228.0M) Survivors: 29.0M->0.0B Heap: 585.2M(2048.0M)->116.2M(2048.0M)], [Metaspace: 107516K->105667K(1150976K)]
+ [Times: user=0.94 sys=0.00, real=0.80 secs]
+
+9949.841: [Full GC (Heap Inspection Initiated GC)  205M->115M(2048M), 0.4896575 secs]
+   [Eden: 90.0M(1228.0M)->0.0B(1228.0M) Survivors: 0.0B->0.0B Heap: 205.8M(2048.0M)->115.5M(2048.0M)], [Metaspace: 105667K->105667K(1150976K)]
+ [Times: user=0.63 sys=0.00, real=0.49 secs]
+```
+
+
+
 G1的垃圾收集器是和应用程序并发执行的，当Mixed GC的速度赶不上应用程序申请内存的速度的时候，Mixed GC就会降级到Full GC，使用的是Serial GC。Full GC会导致长时间的STW，应该要尽量避免。
 
 触发条件
 
 - 拷贝存活对象（Evacuation）没有足够的to-space 来存放晋升的对象
 - 并发处理过程完成之前空间耗尽
+- 手动触发Full GC（System.gc() 或 通过 jmap 工具）
 
 注意事项
 
