@@ -23,7 +23,7 @@ redisObject C语言定义如下
 
 ## string
 
- Redis 的字符串叫着「SDS」，也就是`Simple Dynamic String` ； 它的结构是一个带长度信息的字节数组。 
+ Redis 的字符串叫着「SDS」，也就是`Simple Dynamic String` ； 它的结构是一个带长度信息的字节数组；字符串是可以修改的。 
 
 ```c
 struct SDS<T> {
@@ -145,7 +145,15 @@ struct quicklistNode {
 
 ## zset 有序集合
 
-- ziplist 总个数<128 and value < 64byte (可以在redis.config中修改)
-- skiplist + dict(hash)
-  -  ![img](Redis数据结构.assets/164d9f96ed4e1a0d) 
+- ziplist 总个数<128 and member< 64byte (可以在redis.config中修改)
+
+  - 紧挨在一起的压缩列表节点保存，第一个节点保存member，第二个节点保存score
+
+- skiplist编码底层命名为zet，它同时包含hash 和 跳跃表（skiplist）
+
+  - 整体结构 ![img](Redis数据结构.assets/164d9cd9064b556e)
+
+    
+
+  - skiplist跳表结构 ![img](Redis数据结构.assets/164d9f96ed4e1a0d) 
 
