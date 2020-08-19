@@ -38,11 +38,34 @@ struct SDS<T> {
 
   Redis 规定字符串的长度不得超过 512M 字节 
 
-- int 8个字节的长整形（long，2^63-1）
-- embstr 存储 <=44个字节的字符串
-- raw 存储>44个字节的字符串
-
 ### embstr vs raw
+
+> redis字符串有两种存储方式，在长度特别短时，使用embstr方式存储；当长度>=44时使用raw方式存储。
+>
+> 为什么会有这样的区别，先来看看Redis 对象头结构体，如下说是
+>
+> ```c
+> struct RedisObject {
+>     int4 type; // 4bits 类型，不同的对象具有不同的类型
+>     int4 encoding; // 4bits 存储形式，同一个对象会有不同的存储形式
+>     int24 lru; // 24bits LRU信息
+>     int32 refcount; // 4bytes 引用计数
+>     void *ptr; // 8bytes，64-bit system 指向对象内容的具体存储
+> } robj;
+> ```
+>
+> 再看 SDS 结构体的大小，在字符串比较小时，SDS 对象头的大小是`capacity+3`，至少是 3。意味着分配一个字符串的最小空间占用为 19 字节 (16+3)
+>
+> ``` c
+> struct SDS {
+>     int8 capacity; // 1byte
+>     int8 len; // 1byte
+>     int8 flags; // 1byte
+>     byte[] content; // 内联数组，长度为 capacity
+> }
+> ```
+>
+> 
 
  ![img](Redis数据结构.assets/164db4dcdac7e7f9) 
 
