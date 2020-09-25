@@ -135,7 +135,7 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
       [Free CSet: 0.0 ms]
    // Eden容量为14M，使用了14M，GC后变为0，容量目标大小增加到16M
    // SurvivorsGC前为0，GC后变为2048K
-   // GC前，Heap容量为256M，使用了14M，GC后，Heap容量为256M，使用了9739k
+   // GC前，Heap容量为256M，使用了14M，GC后，Heap容量为256M，使用了3683.5K
    [Eden: 14.0M(14.0M)->0.0B(16.0M) Survivors: 0.0B->2048.0K Heap: 14.0M(256.0M)->3683.5K(256.0M)]
  // user=0.00 在垃圾回收时，执行用户态代码所消耗的处理器时间， 这个时间包含了所有线程运行的CPU时间，所以比real大很多
  // sys=0.00: 执行核心态代码所耗费的处理器时间
