@@ -60,7 +60,7 @@ JVM中包含好几个垃圾垃圾收集器，包括：Serial、ParNew、Parallel
 46.680: [GC (Allocation Failure) 46.680: [ParNew: 76057K->3477K(78656K), 0.0056138 secs] 123853K->52917K(253440K), 0.0057093 secs] [Times: user=0.06 sys=0.00, real=0.01 secs] 
 ```
 
-1. CMS-initial-mark 初始标记阶段，46131K(174784K) : 老年代容量174784K，使用了46131K开始标记
+1. CMS-initial-mark 初始标记阶段，46131K(174784K) : 老年代容量174784K，使用了46131K
 2. CMS-concurrent-mark-start 并发标记，与用户线程并发执行，过程耗时很长。目的：从GC Root开始对堆中对象进行可达性分析，找出存活对象
 3. CMS-concurrent-mark: 0.056/0.056 secs 并发标记阶段花费了0.056 secs
 4. CMS-concurrent-preclean-start 并发预清理阶段，也是与用户线程并发执行。虚拟机查找在执行并发标记阶段新进入老年代的对象(可能会有一些对象从新生代晋升到老年代， 或者有一些对象被分配到老年代)。通过重新扫描，减少下一个阶段”重新标记”的工作，因为下一个阶段会Stop The World。
