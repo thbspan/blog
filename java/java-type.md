@@ -24,7 +24,7 @@ Map map = null;
 
 ### 主要方法
 + Type[] getActualTypeArguments()
-  
+
     返回泛型<>中的实际类型数组；比如`List<Integer> `返回Integer
 + Type getRawType()
 
@@ -69,7 +69,7 @@ public class ParameterizedTypeTest {
 ```
 
 ## TypeVariable
-类型变量，泛型中的变量 ，例如：`T t = null`等变量
+类型变量，泛型中的变量，例如：`T t = null`等变量
 
 ### 主要方法
 + getBounds
