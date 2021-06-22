@@ -36,6 +36,12 @@ hystrix内置断路器HystrixCricuitBreaker实现，一种有三种状态
 
 hystrix通过线程池和信号量（Semaphore）两种模式来实现隔离
 
+相关的配置参数
+
+```
+hystrix.command.default.execution.isolation.strategy 
+```
+
 ### 线程池模式
 
 默认情况下，hystrix采用线程池模式来实现隔离
