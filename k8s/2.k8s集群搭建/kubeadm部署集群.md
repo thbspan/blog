@@ -128,17 +128,17 @@
 8. 部署k8s Master节点
 
    ``` shell
-   sudo kubeadm init --apiserver-advertise-address=10.0.3.4 --image-repository registry.aliyuncs.com/google_containers --kubernetes-version=v1.21.4 --service-cidr=172.16.0.1/20 --pod-network-cidr=192.168.0.1/16
+   sudo kubeadm init --apiserver-advertise-address 10.0.3.4 --image-repository registry.aliyuncs.com/google_containers --kubernetes-version v1.21.4 --service-cidr 172.16.0.0/20 --pod-network-cidr 192.168.0.0/16
    
    --apiserver-advertise-address： API 服务器所公布的其正在监听的 IP 地址。如果未设置，则使用默认网络接口
    
    --image-repository： 指定阿里镜像仓库
    
-   --kubernetes-version=v1.21.4   这个参数是下载的k8s软件版本号
+   --kubernetes-version v1.21.4   这个参数是下载的k8s软件版本号
    
-   --service-cidr=172.16.0.1/20   service-cidr 的选取不能和PodCIDR及本机网络有重叠或者冲突
+   --service-cidr 172.16.0.0/20   service-cidr 的选取不能和PodCIDR及本机网络有重叠或者冲突
    
-   --pod-network-cidr=192.168.0.1/16   k8s内部的pod节点之间网络可以使用的IP段
+   --pod-network-cidr 192.168.0.0/16   k8s内部的pod节点之间网络可以使用的IP段
    
    
    安装失败，执行以下命令，重新安装：sudo kubeadm reset
@@ -172,7 +172,7 @@
    ``` shell
    # Master 节点执行sudo kubeadm init后会生成其他node加入的命令
    # sudo kubeadm token create --print-join-command 可以重新查看加入命令
-   # kubeadm join 10.0.3.4:6443 --token 2sa7gn.gxisejpfi6g4sot3 --discovery-token-ca-cert-hash sha256:f31ac15fa82a1088c213f6c70660c2eba0698af6036401efc80766835f82a8c1
+   # sudo kubeadm join 10.0.3.4:6443 --token 2sa7gn.gxisejpfi6g4sot3 --discovery-token-ca-cert-hash sha256:f31ac15fa82a1088c213f6c70660c2eba0698af6036401efc80766835f82a8c1
    ```
 
 11. Master部署CNI网络插件
@@ -181,9 +181,54 @@
 kubectl get node
 ```
 
-    上面的状态还是NotReady，下面我们需要网络插件，来进行联网访问
+![image-20210907224635981](kubeadm部署集群.assets/image-20210907224635981.png)
+
+上面的状态还是NotReady，下面我们需要网络插件，来进行联网访问
 
 ```shell
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
+
+![image-20210907230115506](kubeadm部署集群.assets/image-20210907230115506.png)
+
+安装了网络插件后，各个节点处于`Ready`状态
+
+#### 测试k8s集群
+
+1. 安装nginx
+
+   ``` shell
+   # 安装nginx
+   kubectl create deployment nginx --image=nginx
+   # 查看状态
+   kubectl get pod
+   ```
+
+   ![image-20210907230626100](kubeadm部署集群.assets/image-20210907230626100.png)
+
+   ``` shell
+   # 查看nginx部署在哪个节点
+   kubectl get pod nginx-6799fc88d8-svcn4 -o wide
+   ```
+
+   ![image-20210907233327528](kubeadm部署集群.assets/image-20210907233327528.png)
+
+2. 暴露端口
+
+   ``` shell
+   # 暴露端口
+   kubectl expose deployment nginx --port=80 --type=NodePort
+   # 查看一下对外的端口
+   kubectl get pod,svc
+   
+   kubectl get svc nginx -o wide
+   ```
+
+   ![image-20210907233605564](kubeadm部署集群.assets/image-20210907233605564.png)
+
+3. 浏览器访问
+
+   nginx部署在spark-slave1节点上，所以需要访问 http://spark-slave1:31067
+
+![image-20210907234229933](kubeadm部署集群.assets/image-20210907234229933.png)
 
