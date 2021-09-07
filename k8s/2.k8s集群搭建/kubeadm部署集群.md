@@ -37,15 +37,14 @@
 
 0. 屏蔽系统休眠
 
-   ``` shell
-   # 查询状态
-   systemctl status sleep.target
-   # 禁启用
-   sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
-   # 最后检测状态
-   ```
-
-   
+    ``` shell
+    # 查询状态
+    systemctl status sleep.target
+    # 禁启用
+    sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+    # 最后再次检测状态
+    systemctl status sleep.target
+    ```
 
 1. 关闭防火墙
 
@@ -94,11 +93,11 @@
 6. 同步时间
 
    ```shell
-   apt install ntpdate
+   sudo apt install ntpdate
    # 将系统时间与网络同步
-   ntpdate cn.pool.ntp.org
+   sudo ntpdate cn.pool.ntp.org
    # 将时间写入硬件
-   hwclock --systohc
+   sudo hwclock --systohc
    ```
 
 7. 安装 kubectl kubeadm kubelet
@@ -118,8 +117,12 @@
    sudo apt-get update
    # 安装指定的版本，使用命令 apt-cache madison kubectl 可以查看软件可以安装的所有版本
    sudo apt-get install -y kubelet<=version> kubeadm<=version> kubectl<=version>
+   # sudo apt-get install -y kubelet=1.21.4-00 kubeadm=1.21.4-00 kubectl=1.21.4-00
    # 锁定软件版本，阻止软件更新
    sudo apt-mark hold kubelet kubeadm kubectl
+   
+   # 设置开机自启动
+   sudo systemctl enable kubelet
    ```
 
 8. 部署k8s Master节点
@@ -149,6 +152,9 @@
    
    # 拉取镜像
    sudo kubeadm config images pull --image-repository registry.aliyuncs.com/google_containers --kubernetes-version=v1.21.4
+   
+   # 执行成功后会打印加入的命令，也可以通过下面的命令重新生成
+   sudo kubeadm token create --print-join-command
    ```
 
 9. 配置运行kubectl
@@ -161,5 +167,23 @@
    kubectl get nodes
    ```
 
-
 10. 加入其他的kube node节点
+
+   ``` shell
+   # Master 节点执行sudo kubeadm init后会生成其他node加入的命令
+   # sudo kubeadm token create --print-join-command 可以重新查看加入命令
+   # kubeadm join 10.0.3.4:6443 --token 2sa7gn.gxisejpfi6g4sot3 --discovery-token-ca-cert-hash sha256:f31ac15fa82a1088c213f6c70660c2eba0698af6036401efc80766835f82a8c1
+   ```
+
+11. Master部署CNI网络插件
+
+``` shell
+kubectl get node
+```
+
+    上面的状态还是NotReady，下面我们需要网络插件，来进行联网访问
+
+```shell
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
+
